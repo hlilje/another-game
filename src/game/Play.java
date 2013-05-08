@@ -14,7 +14,7 @@ import org.newdawn.slick.tiled.*;
  * logic of the actual PLAY state.
  * 
  * @author Hampus Liljekvist
- * @version 2013-05-04
+ * @version 2013-05-08
  */
 public class Play extends BasicGameState {
 	private static int score;
@@ -361,7 +361,8 @@ public class Play extends BasicGameState {
 	 */
 	private void addItems() throws SlickException {
 		int notRand = 3; // Number of items without randomised positions
-		int isRand = 50; // Number of items with randomised positions
+		// Get the user supplied value from the menu
+		int isRand = Menu.getNumRandItems(); // Number of items with randomised positions
 		items = new Item[notRand + isRand];
 
 		// Add static items with static sizes
@@ -412,7 +413,8 @@ public class Play extends BasicGameState {
 	 * @throws SlickException
 	 */
 	private void addNPCs() throws SlickException {
-		NPCs = new NPC[100]; // Choose how many NPCs to generate
+		int numNPCs = Menu.getNumNPCs(); // Get the user supplied value from the menu
+		NPCs = new NPC[numNPCs]; // Choose how many NPCs to generate
 		/*
 		 * Randomise their starting positions, add some padding
 		 * with tileSize to hinder them from spawing out of

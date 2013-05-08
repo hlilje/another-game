@@ -9,10 +9,12 @@ import org.newdawn.slick.state.transition.*;
  * This is the main MENU class for starting the game.
  * 
  * @author Hampus Liljekvist
- * @version 2013-05-06
+ * @version 2013-05-08
  */
 public class Menu extends BasicGameState {
 	private TextField tfEnemies, tfItems;
+	private static int numNPCs, numRandItems;
+	private boolean fetchFields;
 	
 	/**
 	 * Constructor.
@@ -34,9 +36,15 @@ public class Menu extends BasicGameState {
 	public void init(GameContainer gc, StateBasedGame sbg)
 			throws SlickException {
 		tfEnemies = new TextField(gc, gc.getDefaultFont(), 100, 100, 100, 30);
+		numNPCs = 100;
+		tfEnemies.setText("" + numNPCs);
 		tfEnemies.setFocus(false);
 		tfItems = new TextField(gc, gc.getDefaultFont(), 300, 100, 100, 30);
+		numRandItems = 50;
+		tfItems.setText("" + numRandItems);
 		tfItems.setFocus(false);
+		
+		fetchFields = false;
 	}
 	
 	/**
@@ -62,7 +70,7 @@ public class Menu extends BasicGameState {
 		tfItems.render(gc, g);
 		g.drawString("Enter the desired amount of", tfEnemies.getX(), tfEnemies.getY()-50);
 		g.drawString("enemies:", tfEnemies.getX(), tfEnemies.getY()-30);
-		g.drawString("items:", tfItems.getX(), tfItems.getY()-30);
+		g.drawString("random items:", tfItems.getX(), tfItems.getY()-30);
 	}
 	
 	/**
@@ -77,8 +85,21 @@ public class Menu extends BasicGameState {
 	public void update(GameContainer gc, StateBasedGame sbg, int delta)
 			throws SlickException {
 		Input input = gc.getInput();
-		String enemiesText = tfEnemies.getText();
-		String itemsText = tfItems.getText();
+		if(fetchFields) {
+			try {
+				String enemiesText = tfEnemies.getText();
+				numNPCs = Integer.parseInt(enemiesText);
+			} catch(Exception e) {
+				System.err.println("INVALID VALUE OF ENEMIES");
+			}
+			try {
+				String randItemsText = tfItems.getText();
+				numNPCs = Integer.parseInt(randItemsText);
+			} catch(Exception e) {
+				System.err.println("INVALID VALUE OF ITEMS");
+			}
+			fetchFields = false;
+		}
 		
 		if(input.isKeyPressed(Input.KEY_S) && !fieldsHasFocus()) {
 			input.clearKeyPressedRecord();
@@ -101,6 +122,20 @@ public class Menu extends BasicGameState {
 		return tfEnemies.hasFocus() || tfItems.hasFocus();
 	}
 	
+	/**
+	 * @return the numNPCs
+	 */
+	public static int getNumNPCs() {
+		return numNPCs;
+	}
+
+	/**
+	 * @return the numRandItems
+	 */
+	public static int getNumRandItems() {
+		return numRandItems;
+	}
+
 	/**
 	 * Returns the ID.
 	 * 
