@@ -9,12 +9,12 @@ import org.newdawn.slick.state.transition.*;
  * This is the main MENU class for starting the game.
  * 
  * @author Hampus Liljekvist
- * @version 2013-05-08
+ * @version 2013-05-09
  */
 public class Menu extends BasicGameState {
-	private TextField tfEnemies, tfItems;
+	private TextField tfNPCs, tfItems;
 	private static int numNPCs, numRandItems;
-	private boolean fetchFields;
+	private boolean startGame, invalidInput, initPlayState;
 	
 	/**
 	 * Constructor.
@@ -35,16 +35,19 @@ public class Menu extends BasicGameState {
 	@Override
 	public void init(GameContainer gc, StateBasedGame sbg)
 			throws SlickException {
-		tfEnemies = new TextField(gc, gc.getDefaultFont(), 100, 100, 100, 30);
+		tfNPCs = new TextField(gc, gc.getDefaultFont(), 100, 100, 100, 30);
 		numNPCs = 100;
-		tfEnemies.setText("" + numNPCs);
-		tfEnemies.setFocus(false);
+		tfNPCs.setText("" + numNPCs);
+		tfNPCs.setFocus(false);
 		tfItems = new TextField(gc, gc.getDefaultFont(), 300, 100, 100, 30);
 		numRandItems = 50;
 		tfItems.setText("" + numRandItems);
 		tfItems.setFocus(false);
 		
-		fetchFields = false;
+		startGame = false;
+		invalidInput = false;
+		// Force the Play state to fetch the init values the user supplied
+		initPlayState = true;
 	}
 	
 	/**
@@ -66,11 +69,14 @@ public class Menu extends BasicGameState {
 		Image splash = new Image("res/img/splash.png");
 		g.drawImage(splash, gc.getWidth()/2-splash.getWidth()/2, gc.getHeight()/2-splash.getHeight()-40);
 		// Text fields
-		tfEnemies.render(gc, g);
+		tfNPCs.render(gc, g);
 		tfItems.render(gc, g);
-		g.drawString("Enter the desired amount of", tfEnemies.getX(), tfEnemies.getY()-50);
-		g.drawString("enemies:", tfEnemies.getX(), tfEnemies.getY()-30);
+		g.drawString("Enter the desired amount of", tfNPCs.getX(), tfNPCs.getY()-50);
+		g.drawString("NPCs:", tfNPCs.getX(), tfNPCs.getY()-30);
 		g.drawString("random items:", tfItems.getX(), tfItems.getY()-30);
+		if(invalidInput) {
+			g.drawString("<<< INVALID VALUE ENTERED >>>", gc.getWidth()/2-135, gc.getHeight()/2-80);
+		}
 	}
 	
 	/**
@@ -85,25 +91,40 @@ public class Menu extends BasicGameState {
 	public void update(GameContainer gc, StateBasedGame sbg, int delta)
 			throws SlickException {
 		Input input = gc.getInput();
-		if(fetchFields) {
+		if(startGame) { // Resets startGame to false if the input is invalid
 			try {
-				String enemiesText = tfEnemies.getText();
-				numNPCs = Integer.parseInt(enemiesText);
+				String NPCsText = tfNPCs.getText();
+				numNPCs = Integer.parseInt(NPCsText);
 			} catch(Exception e) {
 				System.err.println("INVALID VALUE OF ENEMIES");
+				startGame = false;
+				invalidInput = true;
 			}
 			try {
 				String randItemsText = tfItems.getText();
-				numNPCs = Integer.parseInt(randItemsText);
+				numRandItems = Integer.parseInt(randItemsText);
 			} catch(Exception e) {
-				System.err.println("INVALID VALUE OF ITEMS");
+				System.err.println("INVALID VALUE OF RANDOM ITEMS");
+				startGame = false;
+				invalidInput = true;
 			}
-			fetchFields = false;
+			if(initPlayState) {
+				// Init the Play state again to make it fetch the new values
+				// TODO Doesn't work after victory or game over since init is called
+				// by that corresponding screen, and thus the values fetched by
+				// Play will be the old ones.
+				sbg.getState(Game.PLAY).init(gc, sbg);
+				initPlayState = false;
+			}
 		}
-		
+		if(startGame) {
+			startGame = false;
+			sbg.enterState(Game.PLAY, new FadeOutTransition(), new FadeInTransition());
+		}
 		if(input.isKeyPressed(Input.KEY_S) && !fieldsHasFocus()) {
 			input.clearKeyPressedRecord();
-			sbg.enterState(Game.PLAY, new FadeOutTransition(), new FadeInTransition());
+			startGame = true; // Start the game in the next frame
+			invalidInput = false; // Remove the error message
 		}
 		if(input.isKeyPressed(Input.KEY_A) && !fieldsHasFocus()) {
 			input.clearKeyPressedRecord();
@@ -116,10 +137,23 @@ public class Menu extends BasicGameState {
 	}
 	
 	/**
+	 * Called when this state is entered.
+	 * 
+	 * @param gc
+	 * @param sbg
+	 * @throws SlickException
+	 */
+	@Override
+	public void enter(GameContainer gc, StateBasedGame sbg)
+			throws SlickException {
+		System.out.println("ENTER");
+	}
+
+	/**
 	 * @return true if enemy field OR item field has focus
 	 */
 	private boolean fieldsHasFocus() {
-		return tfEnemies.hasFocus() || tfItems.hasFocus();
+		return tfNPCs.hasFocus() || tfItems.hasFocus();
 	}
 	
 	/**

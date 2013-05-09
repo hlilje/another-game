@@ -7,7 +7,7 @@ import org.newdawn.slick.state.*;
  * This is the master game class which manages everything.
  * 
  * @author Hampus Liljekvist
- * @version 2013-05-04
+ * @version 2013-05-09
  */
 public class Game extends StateBasedGame {
 	public static final String GAMENAME = "Another Game";
@@ -46,6 +46,7 @@ public class Game extends StateBasedGame {
 	 */
 	public Game(String gameName) {
 		super(gameName);
+		// Should be added (init) first since Play uses values from it
 		this.addState(new Menu(MENU));
 		this.addState(new Play(PLAY));
 		this.addState(new GameOver(GAMEOVER));
