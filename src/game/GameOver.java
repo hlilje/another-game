@@ -8,7 +8,7 @@ import org.newdawn.slick.state.transition.*;
  * This is the game over screen shown when the game is lost.
  * 
  * @author Hampus Liljekvist
- * @version 2013-05-04
+ * @version 2013-05-11
  */
 public class GameOver extends BasicGameState {
 	/**
@@ -66,12 +66,13 @@ public class GameOver extends BasicGameState {
 		Input input = gc.getInput();
 		if(input.isKeyPressed(Input.KEY_R)) {
 			input.clearKeyPressedRecord();
-			sbg.init(gc);
+			// Force the update before the transition animation to hide the
+			// init if you left Play from a victory or game over.
+			sbg.getState(Game.PLAY).enter(gc, sbg);
 			sbg.enterState(Game.PLAY, new FadeOutTransition(), new FadeInTransition());
 		}
 		if(input.isKeyPressed(Input.KEY_ESCAPE)) {
 			input.clearKeyPressedRecord();
-			sbg.init(gc);
 			sbg.enterState(Game.MENU);
 		}
 	}

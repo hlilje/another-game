@@ -14,7 +14,7 @@ import org.newdawn.slick.tiled.*;
  * logic of the actual PLAY state.
  * 
  * @author Hampus Liljekvist
- * @version 2013-05-08
+ * @version 2013-05-11
  */
 public class Play extends BasicGameState {
 	private static int score;
@@ -32,9 +32,11 @@ public class Play extends BasicGameState {
 	private Sound projectileSound;
 	private float playerHeight, playerWidth;
 	private float playerXpos, playerYpos, cameraXpos, cameraYpos;
-	private long accumulatedTime, oldTime; // Used for projectiles to avoid spam
-	private boolean isGameOver; // To decide if it's game over or victory
+	private long accProjectileTime, oldProjectileTime; // Used for projectiles to avoid spam
+	private long accStaminaSprintTime, accStaminaRechargeTime, oldStaminaTime;
+	private boolean isGameOver, isVictory;
 	private boolean doDamage; // To decide if the player does damage when firing
+	private boolean isRunning;
 	private int damageDelay, damageTimer; // Keep track of hurt cooldowns
 	private ParticleSystem ps; // Used for generating particle effects
 	private FireEmitter fe;
@@ -119,6 +121,15 @@ public class Play extends BasicGameState {
 		doDamage = true;
 		// Start the game as not over
 		isGameOver = false;
+		isVictory = false;
+		isRunning = false;
+		
+		// Init timing variables
+		accProjectileTime = 0L;
+		oldProjectileTime = 0L;
+		accStaminaSprintTime = 0L;
+		accStaminaRechargeTime = 0L;
+		oldStaminaTime = 0L;
 		
 		try {
 			projectileSound = new Sound("res/sound/SpeechMisrecognition.wav");
@@ -177,9 +188,10 @@ public class Play extends BasicGameState {
 
 		// Draw the player health to the screen after the map
 		g.drawString("HP: " + player.getHealth(), 100f, 10f);
-		g.drawString("NPCs left: " + NPCsLeft, 200f, 10f); // Draw the NPCs left
-		g.drawString("Items left: " + itemsLeft, 350f, 10f); // Draw the items left
-		g.drawString("Score: " + score, 500f, 10f); // Draw the current score
+		g.drawString("Stamina: " + player.getStamina(), 200f, 10f);
+		g.drawString("NPCs left: " + NPCsLeft, 350f, 10f); // Draw the NPCs left
+		g.drawString("Items left: " + itemsLeft, 500f, 10f); // Draw the items left
+		g.drawString("Score: " + score, gc.getWidth()-150, 10f); // Draw the current score
 
 //		g.draw(player); // DEBUG Draw the actual 'ghost player'
 		// Always render the player animation centered on the screen
@@ -211,10 +223,16 @@ public class Play extends BasicGameState {
 		// Start by checking if it's game over
 		if(!isGameOver) {
 			if(victoryCondition()) { // Check if the game is won
+				isVictory = true;
 				sbg.enterState(Game.VICTORY);
 			}
 			if(player.isAlive()) {
 				float deltaMod = 0.35f; // Set speed
+				// Check if we should use faster movement i.e. running
+				if(player.hasStamina() && isRunning) {
+					isRunning = false; // Don't run forever
+					deltaMod = 0.5f;
+				}
 				// Get player coordinates as floats
 				playerXpos = player.getX();
 				playerYpos = player.getY();
@@ -278,19 +296,49 @@ public class Play extends BasicGameState {
 					// To avoid projectile spamming
 					long currentTime = System.currentTimeMillis();
 					// Will be set to currentTime initially
-					long passedTime = currentTime - oldTime;
+					long passedTime = currentTime - oldProjectileTime;
 					// Will be set to currentTime initially and make if-statement true
-					accumulatedTime += passedTime;
+					accProjectileTime += passedTime;
 
-					if(accumulatedTime >= 150L) {
+					if(accProjectileTime >= 150L) {
 						String playerDirection = player.getDirection();
 						projectiles.add(new Projectile(playerXpos, playerYpos,
 								3, playerDirection, 100));
-						accumulatedTime = 0; // Reset the accumulated time
+						accProjectileTime = 0; // Reset the accumulated time
 					}
-					oldTime = currentTime;
+					oldProjectileTime = currentTime;
 					projectileSound.play(0.5f, 0.4f); // Pitch, volume
 				}
+				// Handled outside if-statements to be usable by both
+				// TODO Edge cases are currently not considered with this
+				// implementation, may consider moving this code or changing
+				// conditions.
+				int staminaQuantum = 10;
+				long staminaSprintTimeLimit = 150L;
+				long staminaRechargeTimeLimit = 300L;
+				int currentStamina = player.getStamina();
+				long currentTime = System.currentTimeMillis();
+				long passedTime = currentTime - oldStaminaTime;
+				// To avoid infinite counting
+				if(accStaminaSprintTime < staminaSprintTimeLimit)
+					accStaminaSprintTime += passedTime;
+				if(accStaminaRechargeTime < staminaRechargeTimeLimit)
+					accStaminaRechargeTime += passedTime;
+				if(input.isKeyDown(Input.KEY_K)) {
+					isRunning = true; // True since we are trying to run
+					if(player.hasStamina() && accStaminaSprintTime >=
+							staminaSprintTimeLimit) {
+						int newStamina = currentStamina - staminaQuantum;
+						player.setStamina(newStamina);
+						accStaminaSprintTime = 0;
+					}
+				} else if(!player.hasFullStamina() && accStaminaRechargeTime >=
+						staminaRechargeTimeLimit) {
+					int newStamina = currentStamina + staminaQuantum;
+					player.setStamina(newStamina);
+					accStaminaRechargeTime = 0;
+				}
+				oldStaminaTime = currentTime; // Used by both if-statements
 				if(input.isKeyPressed(Input.KEY_ESCAPE)) { // Single click
 					input.clearKeyPressedRecord();
 					sbg.enterState(Game.MENU);
@@ -309,6 +357,38 @@ public class Play extends BasicGameState {
 		} else {
 			sbg.enterState(Game.GAMEOVER); // Since the game was over
 		}
+	}
+
+	/**
+	 * Called when this state is entered.
+	 * 
+	 * @param gc
+	 * @param sbg
+	 * @throws SlickException
+	 */
+	@Override
+	public void enter(GameContainer gc, StateBasedGame sbg)
+			throws SlickException {
+		// Reset the game upon entering the play state if you left
+		// it during a victory or a loss. This is done upon entering
+		// instead of leaving to be able to fetch new user supplied
+		// values for amount of enemies and random items.
+		if(isVictory || isGameOver) {
+			init(gc, sbg);
+		}
+	}
+
+	/**
+	 * Called when this state is leaved.
+	 * 
+	 * @param gc
+	 * @param sbg
+	 * @throws SlickException
+	 */
+	@Override
+	public void leave(GameContainer gc, StateBasedGame sbg)
+			throws SlickException {
+		// Do nothing special upon leaving
 	}
 
 	/**

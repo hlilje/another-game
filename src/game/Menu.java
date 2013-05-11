@@ -9,7 +9,7 @@ import org.newdawn.slick.state.transition.*;
  * This is the main MENU class for starting the game.
  * 
  * @author Hampus Liljekvist
- * @version 2013-05-09
+ * @version 2013-05-11
  */
 public class Menu extends BasicGameState {
 	private TextField tfNPCs, tfItems;
@@ -110,15 +110,15 @@ public class Menu extends BasicGameState {
 			}
 			if(initPlayState) {
 				// Init the Play state again to make it fetch the new values
-				// TODO Doesn't work after victory or game over since init is called
-				// by that corresponding screen, and thus the values fetched by
-				// Play will be the old ones.
 				sbg.getState(Game.PLAY).init(gc, sbg);
 				initPlayState = false;
 			}
 		}
 		if(startGame) {
 			startGame = false;
+			// Force the update before the transition animation to hide the
+			// init if you left Play from a victory or game over.
+			sbg.getState(Game.PLAY).enter(gc, sbg);
 			sbg.enterState(Game.PLAY, new FadeOutTransition(), new FadeInTransition());
 		}
 		if(input.isKeyPressed(Input.KEY_S) && !fieldsHasFocus()) {
@@ -136,19 +136,6 @@ public class Menu extends BasicGameState {
 		}
 	}
 	
-	/**
-	 * Called when this state is entered.
-	 * 
-	 * @param gc
-	 * @param sbg
-	 * @throws SlickException
-	 */
-	@Override
-	public void enter(GameContainer gc, StateBasedGame sbg)
-			throws SlickException {
-		System.out.println("ENTER");
-	}
-
 	/**
 	 * @return true if enemy field OR item field has focus
 	 */

@@ -7,7 +7,7 @@ import org.newdawn.slick.state.*;
  * This is the information screen.
  * 
  * @author Hampus Liljekvist
- * @version 2013-05-09
+ * @version 2013-05-11
  */
 public class About extends BasicGameState {
 	/**
@@ -48,11 +48,12 @@ public class About extends BasicGameState {
 				gc.getWidth()/2-250, gc.getHeight()/2-80);
 		g.drawString("which happens to be free as in free beer.",
 				gc.getWidth()/2-250, gc.getHeight()/2-40);
-		g.drawString("WASD to move, J to fire, I for inventory, Esc for menu in-game.",
+		g.drawString("WASD to move, J to fire, K to sprint, I for inventory,",
 				gc.getWidth()/2-250, gc.getHeight()/2);
+		g.drawString("Esc for menu in-game.", gc.getWidth()/2-250, gc.getHeight()/2+40);
 		g.drawString("Grab all items to win, kill ENEMIES for bonus points.",
-				gc.getWidth()/2-250, gc.getHeight()/2+40);
-		g.drawString("Press Esc to go back", gc.getWidth()/2-250, gc.getHeight()/2+80);
+				gc.getWidth()/2-250, gc.getHeight()/2+80);
+		g.drawString("Press Esc to go back", gc.getWidth()/2-250, gc.getHeight()/2+120);
 	}
 
 	/**

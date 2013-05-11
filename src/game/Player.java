@@ -11,14 +11,14 @@ import org.newdawn.slick.geom.Polygon;
  * a geometric object.
  * 
  * @author Hampus Liljekvist
- * @version 2013-05-04
+ * @version 2013-05-11
  */
 public class Player extends Polygon {
 	// Generated value used for serialisation
 	private static final long serialVersionUID = 125683132315162989L;
 	private Animation avatar, upAnim, downAnim, leftAnim,
 	rightAnim;
-	private int health;
+	private int health, stamina, maxStamina;
 	private boolean alive;
 	String direction;
 	
@@ -44,6 +44,8 @@ public class Player extends Polygon {
 		initAnimations();
 		inv = new Inventory();
 		health = 100;
+		maxStamina = 100;
+		stamina = maxStamina;
 		alive = true;
 	}
 
@@ -185,5 +187,33 @@ public class Player extends Polygon {
 	 */
 	public String getDirection() {
 		return direction;
+	}
+
+	/**
+	 * @return the stamina
+	 */
+	public int getStamina() {
+		return stamina;
+	}
+
+	/**
+	 * @param stamina the stamina to set
+	 */
+	public void setStamina(int stamina) {
+		this.stamina = stamina;
+	}
+	
+	/**
+	 * @return true if the player has stamina left
+	 */
+	public boolean hasStamina() {
+		return stamina > 0;
+	}
+	
+	/**
+	 * @return true if the player has full stamina (or more)
+	 */
+	public boolean hasFullStamina() {
+		return stamina >= maxStamina;
 	}
 }
