@@ -8,7 +8,7 @@ import org.newdawn.slick.geom.Polygon;
 /**
  * 
  * @author Hampus Liljekvist
- * @version 2013-05-04
+ * @version 2013-05-13
  */
 public class NPC extends Polygon {
 	// Generated value used for serialisation
@@ -28,16 +28,14 @@ public class NPC extends Polygon {
 	public NPC(float x, float y, int health, int damage,
 			boolean hostile) throws SlickException {
 		addPoints();
-		
 		super.setX(x);
 		super.setY(y);
-		
-		initAnimations();
 		
 		this.health = health;
 		this.damage = damage;
 		this.hostile = hostile;
 		
+		initAnimations();
 		alive = true;
 	}
 
@@ -61,9 +59,15 @@ public class NPC extends Polygon {
 	 */
 	private void initAnimations() throws SlickException {
 		int[] moveDur = {200, 200}; // ms
+		String side; // Should be set to either 'Evil' or 'Good'
 		
-		Image[] animImgs = {new Image("res/img/avatarUp1.png"),
-				new Image("res/img/avatarUp2.png")};
+		if(isHostile()) {
+			side = "Evil";
+		} else {
+			side = "Good";
+		}
+		Image[] animImgs = {new Image("res/img/avatarUp1" + side + ".png"),
+				new Image("res/img/avatarUp2" + side + ".png")};
 		
 		// False to only update when the user presses a key
 		anim = new Animation(animImgs, moveDur, false);

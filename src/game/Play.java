@@ -14,7 +14,7 @@ import org.newdawn.slick.tiled.*;
  * logic of the actual PLAY state.
  * 
  * @author Hampus Liljekvist
- * @version 2013-05-11
+ * @version 2013-05-13
  */
 public class Play extends BasicGameState {
 	private static int score;
@@ -227,11 +227,13 @@ public class Play extends BasicGameState {
 				sbg.enterState(Game.VICTORY);
 			}
 			if(player.isAlive()) {
-				float deltaMod = 0.35f; // Set speed
+				// Set speed for basically everything except player movement
+				float deltaMod = 0.35f;
+				float deltaModRun = deltaMod; // Separate player movement speed
 				// Check if we should use faster movement i.e. running
 				if(player.hasStamina() && isRunning) {
-					isRunning = false; // Don't run forever
-					deltaMod = 0.5f;
+					isRunning = false; // Check for running in every update
+					deltaModRun = 0.5f;
 				}
 				// Get player coordinates as floats
 				playerXpos = player.getX();
@@ -240,55 +242,55 @@ public class Play extends BasicGameState {
 				if(input.isKeyDown(Input.KEY_W)) {
 					player.setUpAnimation();
 					avatar = player.getAnimation();
-					float newPlayerYpos = playerYpos - delta * deltaMod;
+					float newPlayerYpos = playerYpos - delta * deltaModRun;
 
 					// Check the NEXT position is blocked before updating it
 					if(!tileIsBlocked(playerXpos, newPlayerYpos)
 							&& checkDoorAtTile(playerXpos, newPlayerYpos, 0)) {
 						avatar.update(delta);
-						playerYpos -= delta * deltaMod;
-						cameraYpos -= delta * deltaMod;
+						playerYpos -= delta * deltaModRun;
+						cameraYpos -= delta * deltaModRun;
 						player.setY(playerYpos);
 					}
 				}
 				if(input.isKeyDown(Input.KEY_S)) {
 					player.setDownAnimation();
 					avatar = player.getAnimation();
-					float newPlayerYpos = playerYpos + playerHeight + delta * deltaMod;
+					float newPlayerYpos = playerYpos + playerHeight + delta * deltaModRun;
 
 					// Compensate for coordinate index in top right corner
 					if(!tileIsBlocked(playerXpos, newPlayerYpos)
 							&& checkDoorAtTile(playerXpos, newPlayerYpos, 0)) {
 						avatar.update(delta);
-						playerYpos += delta * deltaMod;
-						cameraYpos += delta * deltaMod;
+						playerYpos += delta * deltaModRun;
+						cameraYpos += delta * deltaModRun;
 						player.setY(playerYpos);
 					}
 				}
 				if(input.isKeyDown(Input.KEY_A)) {
 					player.setLeftAnimation();
 					avatar = player.getAnimation();
-					float newPlayerXpos = playerXpos - delta*deltaMod;
+					float newPlayerXpos = playerXpos - delta*deltaModRun;
 
 					if(!tileIsBlocked(newPlayerXpos, playerYpos)
 							&& checkDoorAtTile(newPlayerXpos, playerYpos, 0)) {
 						avatar.update(delta);
-						playerXpos -= delta * deltaMod;
-						cameraXpos -= delta * deltaMod;
+						playerXpos -= delta * deltaModRun;
+						cameraXpos -= delta * deltaModRun;
 						player.setX(playerXpos);
 					}
 				}
 				if(input.isKeyDown(Input.KEY_D)) {
 					player.setRightAnimation();
 					avatar = player.getAnimation();
-					float newPlayerXpos = playerXpos + playerHeight + delta*deltaMod; 
+					float newPlayerXpos = playerXpos + playerHeight + delta*deltaModRun; 
 
 					// Compensate for coordinate index in top right corner
 					if(!tileIsBlocked(newPlayerXpos, playerYpos)
 							&& checkDoorAtTile(newPlayerXpos, playerYpos, 0)) {
 						avatar.update(delta);
-						playerXpos += delta * deltaMod;
-						cameraXpos += delta * deltaMod;
+						playerXpos += delta * deltaModRun;
+						cameraXpos += delta * deltaModRun;
 						player.setX(playerXpos);
 					}
 				}
@@ -309,11 +311,9 @@ public class Play extends BasicGameState {
 					oldProjectileTime = currentTime;
 					projectileSound.play(0.5f, 0.4f); // Pitch, volume
 				}
-				// Handled outside if-statements to be usable by both
-				// TODO Edge cases are currently not considered with this
-				// implementation, may consider moving this code or changing
-				// conditions.
-				int staminaQuantum = 10;
+				
+				// Handled outside if-statements to be usable by both cases
+				int staminaQuantum = 10; // Set how much stamina to increase/decrease
 				long staminaSprintTimeLimit = 150L;
 				long staminaRechargeTimeLimit = 300L;
 				int currentStamina = player.getStamina();
@@ -339,6 +339,7 @@ public class Play extends BasicGameState {
 					accStaminaRechargeTime = 0;
 				}
 				oldStaminaTime = currentTime; // Used by both if-statements
+				
 				if(input.isKeyPressed(Input.KEY_ESCAPE)) { // Single click
 					input.clearKeyPressedRecord();
 					sbg.enterState(Game.MENU);
@@ -519,8 +520,9 @@ public class Play extends BasicGameState {
 			int randHP = 1 + rand.nextInt(2000);
 			int randDMG = 1 + rand.nextInt(100);
 			boolean randHostile = true;
-			if(rand.nextInt(2) == 1)
+			if(rand.nextInt(2) == 1) {
 				randHostile = false;
+			}
 			// Create new NPC object, x, y, hp, dmg, hostile
 			NPCs[i] = new NPC(randX, randY, randHP, randDMG, randHostile);
 		}

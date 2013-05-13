@@ -11,7 +11,7 @@ import org.newdawn.slick.geom.Polygon;
  * a geometric object.
  * 
  * @author Hampus Liljekvist
- * @version 2013-05-11
+ * @version 2013-05-13
  */
 public class Player extends Polygon {
 	// Generated value used for serialisation
@@ -21,7 +21,6 @@ public class Player extends Polygon {
 	private int health, stamina, maxStamina;
 	private boolean alive;
 	String direction;
-	
 	/*
 	 * Horrible way to make sure that all states have access to
 	 * the player inventory, if a new player would be created,

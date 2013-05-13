@@ -9,7 +9,7 @@ import org.newdawn.slick.state.*;
  * currently in the player's inventory. 
  * 
  * @author Hampus Liljekvist
- * @version 2013-05-04
+ * @version 2013-05-13
  */
 public class InventoryScreen extends BasicGameState {
 	private Inventory inv;
@@ -95,6 +95,23 @@ public class InventoryScreen extends BasicGameState {
 			input.clearKeyPressedRecord();
 			sbg.enterState(Game.PLAY);
 		}
+	}
+
+	/**
+	 * Called upon entering.
+	 * 
+	 * @param gc
+	 * @param sbg
+	 * @throws SlickException
+	 */
+	@Override
+	public void enter(GameContainer gc, StateBasedGame sbg)
+			throws SlickException {
+		// Since a new Player is created upon resetting the game,
+		// make sure you always fetch the static inv upon entering.
+		// Otherwise this class will only reference the inv created
+		// first.
+		inv = Player.getInventory();
 	}
 
 	/**
