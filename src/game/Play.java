@@ -14,7 +14,7 @@ import org.newdawn.slick.tiled.*;
  * logic of the actual PLAY state.
  * 
  * @author Hampus Liljekvist
- * @version 2013-05-13
+ * @version 2013-05-18
  */
 public class Play extends BasicGameState {
 	private static int score;
@@ -29,7 +29,7 @@ public class Play extends BasicGameState {
 	private NPC[] NPCs;
 	private int NPCsLeft, itemsLeft;
 	private ArrayList<Projectile> projectiles;
-	private Sound projectileSound;
+	private Sound projectileSound, music;
 	private float playerHeight, playerWidth;
 	private float playerXpos, playerYpos, cameraXpos, cameraYpos;
 	private long accProjectileTime, oldProjectileTime; // Used for projectiles to avoid spam
@@ -132,7 +132,7 @@ public class Play extends BasicGameState {
 		oldStaminaTime = 0L;
 		
 		try {
-			projectileSound = new Sound("res/sound/SpeechMisrecognition.wav");
+			projectileSound = new Sound("res/sound/projectile.wav");
 		} catch (SlickException e) {
 			e.printStackTrace();
 		}
@@ -142,6 +142,13 @@ public class Play extends BasicGameState {
 		fe = new FireEmitter(100, 100);
 		fe.setEnabled(true);
 		ps.addEmitter(fe);
+		
+		try {
+			music = new Sound("res/sound/another-ost.wav");
+//			music.loop();
+		} catch (SlickException e) {
+			e.printStackTrace();
+		}
 	}
 
 	/**
@@ -307,9 +314,9 @@ public class Play extends BasicGameState {
 						projectiles.add(new Projectile(playerXpos, playerYpos,
 								3, playerDirection, 100));
 						accProjectileTime = 0; // Reset the accumulated time
+						projectileSound.play();
 					}
 					oldProjectileTime = currentTime;
-					projectileSound.play(0.5f, 0.4f); // Pitch, volume
 				}
 				
 				// Handled outside if-statements to be usable by both cases
@@ -377,6 +384,9 @@ public class Play extends BasicGameState {
 		if(isVictory || isGameOver) {
 			init(gc, sbg);
 		}
+		if(!music.playing()) {
+			music.play(1.0f, 0.5f); // Pitch, volume
+		}
 	}
 
 	/**
@@ -389,7 +399,9 @@ public class Play extends BasicGameState {
 	@Override
 	public void leave(GameContainer gc, StateBasedGame sbg)
 			throws SlickException {
-		// Do nothing special upon leaving
+		if(music.playing()) {
+			music.stop();
+		}
 	}
 
 	/**
@@ -449,17 +461,17 @@ public class Play extends BasicGameState {
 		// Add static items with static sizes
 		Item item = new Item(170f, 100f, 25f, 25f, "key1");
 		item.setImage("res/img/item1.png");
-		item.setSound("res/sound/battle002.wav");
+		item.setSound("res/sound/item-grab.wav");
 		items[0] = item;
 
 		Item item2 = new Item(1000f, 800f, 50f, 50f, "random2");
 		item2.setImage("res/img/item1.png");
-		item2.setSound("res/sound/battle002.wav");
+		item2.setSound("res/sound/item-grab.wav");
 		items[1] = item2;
 		
 		Item item3 = new Item(450f, 500f, 50f, 50f, "tag");
 		item3.setImage("res/img/item1.png");
-		item3.setSound("res/sound/battle002.wav");
+		item3.setSound("res/sound/item-grab.wav");
 		items[2] = item3;
 		
 		// Generate randomised items with randomised sizes
@@ -483,7 +495,7 @@ public class Play extends BasicGameState {
 			Item randItem = new Item(randX, randY, randW, randH, "generic"+(i-notRand+1));
 			items[i] = randItem;
 			randItem.setImage("res/img/item1.png");
-			randItem.setSound("res/sound/battle002.wav");
+			randItem.setSound("res/sound/item-grab.wav");
 		}
 		itemsLeft = items.length;
 	}
