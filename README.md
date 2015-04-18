@@ -1,6 +1,6 @@
 # Another Game
 
-This is a very poorly written game using the Slick2D library.
+This is an old and very poorly written game using the Slick2D library.
 
 ## Old Description
 
