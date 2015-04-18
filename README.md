@@ -1,3 +1,9 @@
+# Another Game
+
+This is a very poorly written game using the Slick2D library.
+
+## Old Description
+
 Another time, another game.
 
 This is a sort of work in progress, but due to the lack of support of the
